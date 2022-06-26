@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Pokedex</string>
+    <string name="status">스테이터스</string>
 </resources>
