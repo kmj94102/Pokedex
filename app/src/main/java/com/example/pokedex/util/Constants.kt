@@ -12,6 +12,9 @@ object Constants {
     fun getDotImage(index: Int) : String =
         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${index}.png"
 
+    fun getShinyImage(index: Int) : String =
+        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/${index}.png"
+
     fun Context.makeToast(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }

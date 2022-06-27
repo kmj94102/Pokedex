@@ -2,17 +2,21 @@ package com.example.pokedex.view
 
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -21,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -32,6 +37,7 @@ import com.example.pokedex.netwrok.data.PokemonInfoResult
 import com.example.pokedex.netwrok.data.getStatusColor
 import com.example.pokedex.ui.theme.SubColor
 import com.example.pokedex.util.Constants.getDetailImage
+import com.example.pokedex.util.Constants.getShinyImage
 
 // 상세 화면 관련 Compose
 @Composable
@@ -45,32 +51,71 @@ fun DetailContainer(index: Int, name: String, viewModel: MainViewModel = hiltVie
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-
-        Column {
-            DexImage(MainActivity.IMAGE_TYPE_TOP)
+        Box {
             Column(
                 modifier = Modifier
                     .background(SubColor)
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(0.dp, 137.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PokemonInfoImage(index, name)
                 PokemonStatus(pokemonInfo)
+                PokemonShinyImage(index)
             }
-            DexImage(MainActivity.IMAGE_TYPE_BOTTOM)
+            DexImage(MainActivity.IMAGE_TYPE_TOP)
+            DexImage(
+                type = MainActivity.IMAGE_TYPE_BOTTOM,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
 
 @Composable
 fun PokemonInfoImage(index: Int, name: String) {
+
+    val infiniteTransition = rememberInfiniteTransition()
+    val rotationAngle = infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 4000,
+                delayMillis = 0,
+                easing = FastOutLinearInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+    )
+    val circleSize by infiniteTransition.animateFloat(
+        initialValue = 100.0f,
+        targetValue = 300.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 1000,
+                delayMillis = 0,
+                easing = FastOutLinearInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
     Box {
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(Color(0x805282F7))
+                .size(circleSize.dp)
+                .align(Alignment.Center)
+        )
         Image(
             painter = painterResource(id = R.drawable.img_character_effect),
             contentDescription = "circle",
-            modifier = Modifier.size(360.dp)
+            modifier = Modifier
+                .size(360.dp)
+                .rotate(rotationAngle.value)
         )
         PokemonImage(url = getDetailImage(index), modifier = Modifier.padding(55.dp))
         Text(
@@ -141,19 +186,51 @@ fun PokemonStatus(pokemonInfo: PokemonInfoResult) {
 }
 
 @Composable
+fun PokemonShinyImage(index: Int) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp, 20.dp, 20.dp, 30.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = stringResource(id = R.string.shiny),
+            style = TextStyle(
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp
+            )
+        )
+        PokemonImage(getShinyImage(index), Modifier.align(Alignment.CenterHorizontally))
+    }
+}
+
+@Composable
 fun StatusBar(name: String, status: Float, color: Color, modifier: Modifier = Modifier) {
     Row(modifier = Modifier.fillMaxWidth()) {
+        var isRotated by rememberSaveable { mutableStateOf(false) }
+        val rotationAngle by animateFloatAsState(
+            targetValue = if (isRotated) status / 150 else 0.0f,
+            animationSpec = tween(durationMillis = 2500)
+        )
+        val onClickAction = remember(Unit) {
+            {
+                isRotated = !isRotated
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            onClickAction()
+        }
         Text(
             text = name,
             modifier = Modifier.weight(3f)
         )
-
         LinearProgressIndicator(
             modifier = modifier
                 .height(20.dp)
                 .weight(10f)
                 .clip(RoundedCornerShape(20.dp)),
-            progress = status / 150,
+            progress = rotationAngle,
             color = color
         )
 

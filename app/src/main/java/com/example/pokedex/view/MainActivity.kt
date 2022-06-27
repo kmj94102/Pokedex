@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -63,7 +65,7 @@ fun NavigationGraph() {
         RouteAction(navController)
     }
 
-    NavHost(navController = navController, startDestination = RouteAction.HOME ) {
+    NavHost(navController = navController, startDestination = RouteAction.HOME) {
         composable(RouteAction.HOME) {
             MainContainer(routeAction)
         }
@@ -93,19 +95,22 @@ fun MainContainer(routeAction: RouteAction) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column {
-            DexImage(IMAGE_TYPE_TOP)
+        Box {
             LazyColumn(
                 modifier = Modifier
                     .background(SubColor)
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 137.dp)
             ) {
                 itemsIndexed(getPokemonList()) { index, item ->
-                    PokemonItem(index+1, item, routeAction)
+                    PokemonItem(index + 1, item, routeAction)
                 }
             }
-            DexImage(IMAGE_TYPE_BOTTOM)
+            DexImage(IMAGE_TYPE_TOP)
+            DexImage(
+                type = IMAGE_TYPE_BOTTOM,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
@@ -132,7 +137,7 @@ fun PokemonItem(index: Int, name: String, routeAction: RouteAction, modifier: Mo
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(25.dp)
+            .padding(25.dp, 5.dp)
             .clickable { routeAction.navToDetail(index, name) },
         verticalAlignment = Alignment.CenterVertically
     ) {
