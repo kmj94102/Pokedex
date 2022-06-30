@@ -13,9 +13,7 @@ class PokemonClient @Inject constructor(
         onFailureListener : () -> Unit
     ) =
         try {
-            val result = service.getPokemonDetail(
-                index = index
-            )
+            val result = service.getPokemonDetail(index = index)
 
             if (result.isSuccessful) {
                 result.body()?.let(onSuccessListener)?: onFailureListener()

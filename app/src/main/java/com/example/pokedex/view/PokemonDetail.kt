@@ -1,14 +1,13 @@
 package com.example.pokedex.view
 
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -16,28 +15,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.example.pokedex.R
 import com.example.pokedex.netwrok.data.PokemonInfoResult
 import com.example.pokedex.netwrok.data.getStatusColor
 import com.example.pokedex.ui.theme.SubColor
 import com.example.pokedex.util.Constants.getDetailImage
 import com.example.pokedex.util.Constants.getShinyImage
+import com.skydoves.landscapist.glide.GlideImage
 
 // 상세 화면 관련 Compose
 @Composable
@@ -64,9 +57,9 @@ fun DetailContainer(index: Int, name: String, viewModel: MainViewModel = hiltVie
                 PokemonStatus(pokemonInfo)
                 PokemonShinyImage(index)
             }
-            DexImage(MainActivity.IMAGE_TYPE_TOP)
+            DexImage(R.drawable.ic_dex_top)
             DexImage(
-                type = MainActivity.IMAGE_TYPE_BOTTOM,
+                res = R.drawable.ic_dex_bottom,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
@@ -102,7 +95,10 @@ fun PokemonInfoImage(index: Int, name: String) {
         )
     )
 
-    Box {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
         Box(
             modifier = Modifier
                 .clip(CircleShape)
@@ -117,9 +113,21 @@ fun PokemonInfoImage(index: Int, name: String) {
                 .size(360.dp)
                 .rotate(rotationAngle.value)
         )
-        PokemonImage(url = getDetailImage(index), modifier = Modifier.padding(55.dp))
+
+        GlideImage(
+            imageModel = getDetailImage(index),
+            loading = {
+                CircularProgressIndicator()
+            },
+            failure = {
+                Text(text = "이미지 로드에 실패하였습니다.")
+            },
+            modifier = Modifier.padding(55.dp)
+        )
+
         Text(
-            modifier = Modifier.padding(0.dp, 25.dp),
+            modifier = Modifier.padding(20.dp, 25.dp)
+                .align(Alignment.TopStart),
             text = name,
             style = TextStyle(
                 fontSize = 24.sp,
@@ -127,40 +135,6 @@ fun PokemonInfoImage(index: Int, name: String) {
             )
         )
     }
-}
-
-@Composable
-fun PokemonImage(url: String, modifier: Modifier = Modifier) {
-    val bitmap: MutableState<Bitmap?> = remember {
-        mutableStateOf(null)
-    }
-
-    Glide.with(LocalContext.current)
-        .asBitmap()
-        .load(url)
-        .placeholder(R.drawable.ic_ball)
-        .into(object : CustomTarget<Bitmap>() {
-            override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                bitmap.value = resource
-            }
-
-            override fun onLoadCleared(placeholder: Drawable?) {}
-        })
-
-    bitmap.value?.asImageBitmap()?.let {
-        Image(
-            bitmap = it,
-            contentDescription = "detail image",
-            modifier = modifier.size(250.dp),
-        )
-    } ?: run {
-        Image(
-            painter = painterResource(id = R.drawable.ic_ball),
-            contentDescription = "empty Image",
-            modifier = modifier.size(250.dp)
-        )
-    }
-
 }
 
 @Composable
@@ -179,7 +153,7 @@ fun PokemonStatus(pokemonInfo: PokemonInfoResult) {
             )
         )
 
-        for((key, status) in pokemonInfo.status) {
+        for ((key, status) in pokemonInfo.status) {
             StatusBar(key, status.toFloat(), getStatusColor(key))
         }
     }
@@ -200,7 +174,14 @@ fun PokemonShinyImage(index: Int) {
                 fontSize = 24.sp
             )
         )
-        PokemonImage(getShinyImage(index), Modifier.align(Alignment.CenterHorizontally))
+        GlideImage(
+            imageModel = getShinyImage(index),
+            loading = { CircularProgressIndicator() },
+            failure = {
+                Text(text = "이미지 로드에 실패하였습니다.")
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
     }
 }
 

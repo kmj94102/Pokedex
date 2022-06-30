@@ -64,5 +64,4 @@ class NetworkModule {
     ) : PokemonService =
         retrofit.create(PokemonService::class.java)
 
-
 }

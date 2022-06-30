@@ -1,9 +1,9 @@
 package com.example.pokedex.view
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,31 +14,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import com.example.pokedex.R
 import com.example.pokedex.netwrok.data.getPokemonList
-import com.example.pokedex.view.MainActivity.Companion.IMAGE_TYPE_BOTTOM
-import com.example.pokedex.view.MainActivity.Companion.IMAGE_TYPE_TOP
 import com.example.pokedex.ui.theme.PokedexTheme
 import com.example.pokedex.ui.theme.SubColor
 import com.example.pokedex.util.Constants.getDotImage
-import com.example.pokedex.util.Constants.makeToast
+import com.skydoves.landscapist.glide.GlideImage
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -49,42 +39,6 @@ class MainActivity : ComponentActivity() {
             PokedexTheme {
                 NavigationGraph()
             }
-        }
-    }
-
-    companion object {
-        const val IMAGE_TYPE_TOP = "image_type_top"
-        const val IMAGE_TYPE_BOTTOM = "image_type_bottom"
-    }
-}
-
-@Composable
-fun NavigationGraph() {
-    val navController = rememberNavController()
-    val routeAction = remember(navController) {
-        RouteAction(navController)
-    }
-
-    NavHost(navController = navController, startDestination = RouteAction.HOME) {
-        composable(RouteAction.HOME) {
-            MainContainer(routeAction)
-        }
-        composable(
-            route = "${RouteAction.DETAIL}/{index}/{name}",
-            arguments = listOf(
-                navArgument("index") { type = NavType.IntType },
-                navArgument("name") { type = NavType.StringType }
-            )
-        ) { entry ->
-            val index = entry.arguments?.getInt("index")
-            val name = entry.arguments?.getString("name")
-
-            if (index == null || name == null) {
-                LocalContext.current.makeToast("오류가 발생하였습니다.")
-                return@composable
-            }
-
-            DetailContainer(index, name)
         }
     }
 }
@@ -106,9 +60,9 @@ fun MainContainer(routeAction: RouteAction) {
                     PokemonItem(index + 1, item, routeAction)
                 }
             }
-            DexImage(IMAGE_TYPE_TOP)
+            DexImage(R.drawable.ic_dex_top)
             DexImage(
-                type = IMAGE_TYPE_BOTTOM,
+                res = R.drawable.ic_dex_bottom,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
@@ -116,16 +70,9 @@ fun MainContainer(routeAction: RouteAction) {
 }
 
 @Composable
-fun DexImage(type: String, modifier: Modifier = Modifier) {
-
-    val imageRes =
-        if (type == IMAGE_TYPE_TOP)
-            com.example.pokedex.R.drawable.ic_dex_top
-        else
-            com.example.pokedex.R.drawable.ic_dex_bottom
-
+fun DexImage(@DrawableRes res: Int, modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = imageRes),
+        painter = painterResource(id = res),
         contentDescription = "dex image",
         contentScale = ContentScale.FillWidth,
         modifier = modifier.fillMaxWidth()
@@ -141,8 +88,17 @@ fun PokemonItem(index: Int, name: String, routeAction: RouteAction, modifier: Mo
             .clickable { routeAction.navToDetail(index, name) },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        PokemonImage(
-            url = getDotImage(index),
+        GlideImage(
+            imageModel = getDotImage(index),
+            loading = {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_ball),
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp).align(Alignment.Center)
+                )
+            },
+            failure = {
+            },
             modifier = modifier.size(70.dp)
         )
 
